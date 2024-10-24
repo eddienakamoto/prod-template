@@ -45,6 +45,8 @@ jobs:
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} '
           mkdir -p /etc/prod-template && \
+          echo "HOST=${{ secrets.HOST }}" >> /etc/prod-template/.env && \
+          echo "PORT=${{ secrets.PORT }}" >> /etc/prod-template/.env && \
           echo "MY_SECRET=${{ secrets.MY_SECRET }}" >> /etc/prod-template/.env
         '
 

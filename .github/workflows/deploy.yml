@@ -111,7 +111,7 @@ jobs:
         ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} '
           export PROMTAIL_PORT=${{ secrets.PROMTAIL_PORT }} && \
           export LOKI_SERVER_URL=${{ secrets.LOKI_SERVER_URL }} && \
-          envsubst < /etc/promtail/config.yaml > /etc/promtail/config.yaml'
+          envsubst < /etc/promtail/config.yml > /etc/promtail/config.yml'
 
     - name: Restart Promtail
       run: |

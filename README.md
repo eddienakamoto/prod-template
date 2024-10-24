@@ -75,3 +75,13 @@ Verify it is running with `systemd`.
 ```bash
 sudo systemctl status promtail
 ```
+
+Once verified, ensure the promtail user has permissions on the `systemd-journal` group.
+```bash
+sudo usermod -aG systemd-journal promtail
+```
+
+Then restart the service.
+```bash
+sudo systemctl restart promtail
+```

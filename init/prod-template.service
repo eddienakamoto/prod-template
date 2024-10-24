@@ -1,0 +1,17 @@
+[Unit]
+Description=Prod Template Service
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/prod-template
+Restart=on-failure
+RestartSec=5
+WorkingDirectory=/usr/local/bin
+Environment=APP_ENV=prod
+EnvironmentFile=/etc/prod-template/.env
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=prod-template
+
+[Install]
+WantedBy=multi-user.target

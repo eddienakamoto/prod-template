@@ -1,0 +1,119 @@
+name: Deploy prod-template API
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy-go-app:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.23
+
+    - name: Build the Go application
+      run: |
+        GOOS=linux GOARCH=amd64 go build -o ./bin/prod-template ./cmd/main.go
+
+    - name: Set up SSH
+      uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: Copy the binary to the production server
+      run: |
+        scp -o StrictHostKeyChecking=no ./bin/prod-template ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }}:/usr/local/bin/prod-template
+
+    - name: Remove existing environment file
+      run: |
+        ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} '
+          rm -f /etc/prod-template/.env
+        '
+
+    - name: Create and export secrets to environment file
+      run: |
+        ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} '
+          echo "MY_SECRET=${{ secrets.MY_SECRET }}" >> /etc/prod-template/.env
+        '
+
+    - name: Deploy Systemd File
+      run: |
+        scp -o StrictHostKeyChecking=no init/prod-template.service ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }}:/etc/systemd/system/prod-template.service
+
+    - name: Reload systemd and restart API
+      run: |
+        ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} '
+          sudo systemctl daemon-reload && \
+          sudo systemctl restart prod-template'
+
+  deploy-caddy-config:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Caddy Config
+      uses: actions/checkout@v2
+
+    - name: Set up SSH
+      uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: Deploy Caddyfile
+      run: |
+        scp -o StrictHostKeyChecking=no config/Caddyfile ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }}:/etc/caddy/Caddyfile
+
+    - name: Create systemd override file
+      run: |
+        ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} '
+          sudo mkdir -p /etc/systemd/system/caddy.service.d && \
+          echo "[Service]
+          Environment=\"CADDY_DOMAIN=${{ secrets.DOMAIN }}\"
+          Environment=\"CADDY_HOST=${{ secrets.HOST }}\"
+          Environment=\"CADDY_PORT=${{ secrets.PORT }}\"
+          " | sudo tee /etc/systemd/system/caddy.service.d/override.conf > /dev/null'
+
+    - name: Reload systemd and restart Caddy
+      run: |
+        ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} '
+          sudo systemctl daemon-reload && \
+          sudo systemctl restart caddy'
+
+  deploy-promtail-config:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Promtail Config
+      uses: actions/checkout@v2
+
+    - name: Set up SSH
+      uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: Copy Promtail Config
+      run: |
+        scp -o StrictHostKeyChecking=no ./config/promtail-config.yaml ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }}:/etc/promtail/config.yaml
+    
+    - name: Inject environment variables and restart Promtail
+      run: |
+        ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} '
+          export PROMTAIL_PORT=${{ secrets.PROMTAIL_PORT }} && \
+          export LOKI_SERVER_URL=${{ secrets.LOKI_SERVER_URL }} && \
+          envsubst < /etc/promtail/config.yaml > /etc/promtail/config.yaml'
+
+    - name: Restart Promtail
+      run: |
+        ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} '
+          sudo systemctl daemon-reload && \
+          sudo systemctl restart promtail'

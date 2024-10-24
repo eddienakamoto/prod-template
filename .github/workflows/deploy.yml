@@ -54,10 +54,12 @@ jobs:
       run: |
         scp -o StrictHostKeyChecking=no init/prod-template.service ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }}:/etc/systemd/system/prod-template.service
 
-    - name: Reload systemd and restart API
+    - name: Reload systemd, journald, and restart API
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} '
           sudo systemctl daemon-reload && \
+          sudo systemctl enable prod-template && \
+          sudo systemctl restart systemd-journald && \
           sudo systemctl restart prod-template'
 
   deploy-caddy-config:

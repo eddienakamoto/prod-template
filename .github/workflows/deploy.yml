@@ -44,6 +44,7 @@ jobs:
     - name: Create and export secrets to environment file
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} '
+          mkdir -p /etc/prod-template && \
           echo "MY_SECRET=${{ secrets.MY_SECRET }}" >> /etc/prod-template/.env
         '
 
@@ -103,7 +104,7 @@ jobs:
 
     - name: Copy Promtail Config
       run: |
-        scp -o StrictHostKeyChecking=no ./config/promtail-config.yaml ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }}:/etc/promtail/config.yaml
+        scp -o StrictHostKeyChecking=no ./config/promtail-config.yml ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }}:/etc/promtail/config.yml
     
     - name: Inject environment variables and restart Promtail
       run: |

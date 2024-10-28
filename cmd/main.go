@@ -55,6 +55,6 @@ func main() {
 
 	prometheus.MustRegister(requestCounter)
 
-	logger.Info("Starting server on :8080")
+	logger.Info("Starting server on :8080...")
 	http.ListenAndServe(fmt.Sprintf("%s:%s", os.Getenv("HOST"), os.Getenv("PORT")), nil)
 }

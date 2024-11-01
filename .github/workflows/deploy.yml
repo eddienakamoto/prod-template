@@ -49,10 +49,35 @@ jobs:
           echo "PORT=${{ secrets.PORT }}" >> /etc/prod-template/.env && \
           echo "MY_SECRET=${{ secrets.MY_SECRET }}" >> /etc/prod-template/.env
         '
+        
+    - name: Stop Systemd Service
+      run: |
+        ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} '
+          if systemctl is-active --quiet prod-template; then
+              echo "Service is active. Stopping the service..."
+              sudo systemctl stop prod-template
+          else
+              echo "Service is inactive or does not exist. No action needed."
+          fi
+        '
 
     - name: Deploy Systemd File
       run: |
         scp -o StrictHostKeyChecking=no init/prod-template.service ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }}:/etc/systemd/system/prod-template.service
+
+    - name: Copy Migration Config
+      run: |
+        scp -o StrictHostKeyChecking=no ./dbconfig.yml ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }}:/etc/prod-template/dbconfig.yml
+
+    - name: Copy Migration Files
+      run: |
+        scp -o StrictHostKeyChecking=no -r ./migrations ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }}:/etc/prod-template/migrations
+
+    - name: Run Migrations
+      run: |
+        ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} '
+          sql-migrate up -config=/etc/prod-template/dbconfig.yml
+        '
 
     - name: Reload systemd, journald, and restart API
       run: |

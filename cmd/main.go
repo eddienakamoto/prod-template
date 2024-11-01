@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"math/rand/v2"
 	"net/http"
 	"os"
 
+	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
@@ -25,6 +27,24 @@ func main() {
 		panic(err)
 	}
 	defer logger.Sync()
+
+	pgconnStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		"localhost",
+		"5432",
+		"genome",
+		"genome",
+		"tester",
+		"disable")
+	pgconn, err := pgxpool.Connect(context.Background(), pgconnStr)
+	if err != nil {
+		fmt.Printf("failed to connect to postgres: %v\n", err)
+		return
+	}
+	defer pgconn.Close()
+	if err := pgconn.Ping(context.Background()); err != nil {
+		fmt.Printf("failed to ping postgres: %v\n", err)
+		return
+	}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		choice := rand.IntN(3) + 1

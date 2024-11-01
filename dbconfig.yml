@@ -1,0 +1,11 @@
+development:
+  dialect: postgres
+  datasource: host=localhost dbname=tester user=genome password=genome sslmode=disable
+  dir: migrations
+  table: migrations
+
+production:
+  dialect: postgres
+  datasource: host=localhost dbname=tester user=genome password=genome sslmode=disable
+  dir: /etc/prod-template/migrations
+  table: migrations

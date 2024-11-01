@@ -71,7 +71,7 @@ jobs:
 
     - name: Copy Migration Files
       run: |
-        scp -o StrictHostKeyChecking=no -r ./migrations ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }}:/etc/prod-template/migrations
+        scp -o StrictHostKeyChecking=no -r ./migrations ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }}:/etc/prod-template/
 
     - name: Run Migrations
       run: |

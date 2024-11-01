@@ -102,7 +102,6 @@ jobs:
           export PSQL_SSLMODE="${{ secrets.PSQL_SSLMODE }}"
 
           /usr/local/bin/migrate --version "$VERSION" --dir /etc/prod-template/migrations
-          echo "$LATEST_MIGRATION_FILE"
           echo "${{ env.LATEST_MIGRATION_FILE }}"
         '
       env:

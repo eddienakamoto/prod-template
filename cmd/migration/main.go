@@ -34,7 +34,12 @@ func main() {
 	}
 	defer pgconn.Close()
 
-	migrationFiles := readMigrationFiles(*dir)
+	migrationFiles, err := readMigrationFiles(*dir)
+	if err != nil {
+		fmt.Println("No migration directory found, assuming no migrations required yet. Exiting...")
+		return
+	}
+
 	migrationsApplied := readAppliedMigrations(pgconn)
 
 	latestAppliedMigration := ""
@@ -145,9 +150,13 @@ func applyLatest(conn *sql.DB, migrationDir string, migrationFiles []string, mig
 	}
 }
 
-func readMigrationFiles(dir string) []string {
+func readMigrationFiles(dir string) ([]string, error) {
 	files, err := os.ReadDir(dir)
 	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, err
+		}
+
 		log.Fatalf("Failed to read migration directory: %v\n", err)
 	}
 
@@ -160,7 +169,7 @@ func readMigrationFiles(dir string) []string {
 
 	sort.Strings(migrationFiles)
 
-	return migrationFiles
+	return migrationFiles, nil
 }
 
 func readAppliedMigrations(conn *sql.DB) []string {

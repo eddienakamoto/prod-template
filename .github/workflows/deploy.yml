@@ -87,7 +87,11 @@ jobs:
 
     - name: Copy Migration Files
       run: |
-        scp -o StrictHostKeyChecking=no -r ./migrations ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }}:/etc/prod-template/
+        if [ -d ./migrations ]; then
+          scp -o StrictHostKeyChecking=no -r ./migrations ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }}:/etc/prod-template/
+        else
+          echo "Migrations directory does not exist. Skipping copy."
+        fi
 
     - name: Run Migration on Production Server
       run: |

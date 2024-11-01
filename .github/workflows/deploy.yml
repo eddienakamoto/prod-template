@@ -93,6 +93,14 @@ jobs:
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} '
           export VERSION='${{ env.LATEST_MIGRATION_FILE }}'
+          export VERSION="${{ env.LATEST_MIGRATION_FILE }}"
+          export PSQL_HOST="${{ secrets.PSQL_HOST }}"
+          export PSQL_PORT="${{ secrets.PSQL_PORT }}"
+          export PSQL_USER="${{ secrets.PSQL_USER }}"
+          export PSQL_PASSWORD="${{ secrets.PSQL_PASSWORD }}"
+          export PSQL_DBNAME="${{ secrets.PSQL_DBNAME }}"
+          export PSQL_SSLMODE="${{ secrets.PSQL_SSLMODE }}"
+          
           /usr/local/bin/migrate --version "$VERSION" --dir /etc/prod-template/migrations
         '
       env:

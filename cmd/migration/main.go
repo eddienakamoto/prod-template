@@ -17,17 +17,17 @@ import (
 
 func main() {
 	migrate.SetTable("migrations")
-	dir := flag.String("dir", "./migrationsxx", "Specify the path to the migrations directory")
+	dir := flag.String("dir", "./migrations", "Specify the path to the migrations directory")
 	version := flag.String("version", "", "Specify the version to migrate to")
 	flag.Parse()
 
 	pgconnStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		"localhost",
-		"5432",
-		"genome",
-		"genome",
-		"tester",
-		"disable")
+		os.Getenv("PSQL_HOST"),
+		os.Getenv("PSQL_PORT"),
+		os.Getenv("PSQL_USER"),
+		os.Getenv("PSQL_PASSWORD"),
+		os.Getenv("PSQL_DBNAME"),
+		os.Getenv("PSQL_SSLMODE"))
 	pgconn, err := connect(context.Background(), pgconnStr)
 	if err != nil {
 		log.Fatalf("Failed to open connection to database: %v\n", err)

@@ -43,6 +43,12 @@ func main() {
 	}
 
 	if *version == "" {
+		fmt.Println("Migrating to latest version...")
+	} else {
+		fmt.Printf("Migrating to version %s\n", *version)
+	}
+
+	if *version == "" {
 		applyLatest(pgconn, *dir, migrationFiles, migrationsApplied)
 	} else if latestAppliedMigration != "" && latestAppliedMigration > *version {
 		downgrade(pgconn, *dir, migrationFiles, migrationsApplied, *version)

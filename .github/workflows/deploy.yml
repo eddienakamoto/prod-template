@@ -49,7 +49,7 @@ jobs:
           echo "PORT=${{ secrets.PORT }}" >> /etc/prod-template/.env && \
           echo "MY_SECRET=${{ secrets.MY_SECRET }}" >> /etc/prod-template/.env
         '
-        
+
     - name: Stop Systemd Service
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} '
@@ -76,7 +76,7 @@ jobs:
     - name: Run Migrations
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} '
-          sql-migrate up -config=/etc/prod-template/dbconfig.yml
+          /root/go/bin/sql-migrate up -config=/etc/prod-template/dbconfig.yml
         '
 
     - name: Reload systemd, journald, and restart API

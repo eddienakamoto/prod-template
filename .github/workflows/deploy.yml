@@ -24,7 +24,8 @@ jobs:
 
     - name: Build the Go application
       run: |
-        GOOS=linux GOARCH=amd64 go build -o ./bin/prod-template ./cmd/main.go
+        GOOS=linux GOARCH=amd64 go build -o ./bin/prod-template ./cmd/api/main.go
+        GOOS=linux GOARCH=amd64 go build -o ./bin/migrate ./cmd/migration/main.go
 
     - name: Set up SSH
       uses: webfactory/ssh-agent@v0.5.3
@@ -34,6 +35,10 @@ jobs:
     - name: Copy the binary to the production server
       run: |
         scp -o StrictHostKeyChecking=no ./bin/prod-template ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }}:/usr/local/bin/prod-template
+
+    - name: Copy the migration binary to the production server
+      run: |
+        scp -o StrictHostKeyChecking=no ./bin/migrate ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }}:/usr/local/bin/migrate
 
     - name: Remove existing environment file
       run: |
@@ -61,6 +66,33 @@ jobs:
           fi
         '
 
+    - name: Find Latest Migration in Git Repo
+      run: |
+          latest=$(ls ./migrations/*.sql 2>/dev/null | sort | tail -n 1)
+          latest_filename=$(basename "$latest")
+          
+          if [ -z "$latest_filename" ]; then
+            echo "No migration files found in the ./migrations directory."
+            exit 1
+          else
+            echo "Latest migration file: $latest_filename"
+            echo "LATEST_MIGRATION_FILE=$latest_filename" >> $GITHUB_ENV
+          fi
+
+    - name: Ensure Migrations Directory exists
+      run: |
+        ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} '
+          mkdir -p /etc/prod-template/migrations
+        '
+
+      - name: Run Migration on Production Server
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} '
+            LATEST_MIGRATION_FILE="${LATEST_MIGRATION_FILE}" /usr/local/bin/migrate --version "$LATEST_MIGRATION_FILE"
+          '
+        env:
+          LATEST_MIGRATION_FILE: ${{ env.LATEST_MIGRATION_FILE }}
+
     - name: Deploy Systemd File
       run: |
         scp -o StrictHostKeyChecking=no init/prod-template.service ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }}:/etc/systemd/system/prod-template.service
@@ -72,13 +104,7 @@ jobs:
     - name: Copy Migration Files
       run: |
         scp -o StrictHostKeyChecking=no -r ./migrations ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }}:/etc/prod-template/
-
-    - name: Run Migrations
-      run: |
-        ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} '
-          /root/go/bin/sql-migrate up -config=/etc/prod-template/dbconfig.yml -env=production
-        '
-
+        
     - name: Reload systemd, journald, and restart API
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} '

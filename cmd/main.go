@@ -6,6 +6,7 @@ import (
 	"math/rand/v2"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/prometheus/client_golang/prometheus"
@@ -53,6 +54,8 @@ func main() {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte("Bad Request"))
 
+			pgconn.Exec(r.Context(), `INSERT INTO dummy(description) VALUES($1)`, fmt.Sprintf("Bad Request: %d at %v", choice, time.Now()))
+
 			logger.Error("Request failed",
 				zap.String("method", r.Method),
 				zap.String("path", r.URL.Path),
@@ -63,6 +66,8 @@ func main() {
 		requestCounter.WithLabelValues("200", r.Method, r.URL.Path).Inc()
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("Hello, world!"))
+
+		pgconn.Exec(r.Context(), `INSERT INTO dummy(description) VALUES($1)`, fmt.Sprintf("Good Request: %d at %v", choice, time.Now()))
 
 		logger.Info("Request processed",
 			zap.String("secret", os.Getenv("MY_SECRET")),

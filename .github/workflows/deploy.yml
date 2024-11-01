@@ -109,19 +109,16 @@ jobs:
     - name: Delete Old Migration Files on Production Server
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} '
-          LATEST_MIGRATION="${{ env.LATEST_MIGRATION_FILE }}"
           cd /etc/prod-template/migrations
           
           for file in *.sql; do
             version="${file%%-*}"
-            if [[ "$version" > "$LATEST_MIGRATION" ]]; then
+            if [[ "$version" > "${{ env.LATEST_MIGRATION_FILE }}" ]]; then
               echo "Deleting file: $file"
               rm "$file"
             fi
           done
         '
-      env:
-        LATEST_MIGRATION_FILE: ${{ env.LATEST_MIGRATION_FILE }}
 
     - name: Deploy Systemd File
       run: |

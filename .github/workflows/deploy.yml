@@ -93,6 +93,7 @@ jobs:
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} '
           export PSQL_HOST="${{ secrets.PSQL_HOST }}"
+          export PSQL_PORT="${{ secrets.PSQL_PORT }}"
           export PSQL_USER="${{ secrets.PSQL_USER }}"
           export PSQL_PASSWORD="${{ secrets.PSQL_PASSWORD }}"
           export PSQL_DBNAME="${{ secrets.PSQL_DBNAME }}"
@@ -100,9 +101,6 @@ jobs:
 
           /usr/local/bin/migrate --version "${{ env.LATEST_MIGRATION_FILE }}" --dir /etc/prod-template/migrations
         '
-      env:
-        LATEST_MIGRATION_FILE: ${{ env.LATEST_MIGRATION_FILE }}
-        PSQL_PORT: ${{ secrets.PSQL_PORT }}
 
     - name: Delete Old Migration Files on Production Server
       run: |

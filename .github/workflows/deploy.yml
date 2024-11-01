@@ -73,7 +73,7 @@ jobs:
         
         if [ -z "$latest_filename" ]; then
           echo "No migration files found in the ./migrations directory."
-          exit 1
+          echo "LATEST_MIGRATION_FILE=0" >> $GITHUB_ENV
         else
           echo "Latest migration file: $latest_filename"
           echo "LATEST_MIGRATION_FILE=$latest_filename" >> $GITHUB_ENV

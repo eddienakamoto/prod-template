@@ -1,6 +1,6 @@
 development:
   dialect: postgres
-  datasource: host=localhost dbname=tester user=genome password=genome sslmode=disable
+  datasource: host=localhost dbname=genome user=genome password=genome sslmode=disable
   dir: migrations
   table: migrations
 

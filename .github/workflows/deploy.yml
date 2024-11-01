@@ -76,7 +76,7 @@ jobs:
     - name: Run Migrations
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} '
-          /root/go/bin/sql-migrate up -config=/etc/prod-template/dbconfig.yml
+          /root/go/bin/sql-migrate up -config=/etc/prod-template/dbconfig.yml -env=production
         '
 
     - name: Reload systemd, journald, and restart API

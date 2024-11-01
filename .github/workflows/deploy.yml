@@ -88,7 +88,7 @@ jobs:
     - name: Run Migration on Production Server
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} '
-          LATEST_MIGRATION_FILE="${LATEST_MIGRATION_FILE}" /usr/local/bin/migrate --version "$LATEST_MIGRATION_FILE" --dir /etc/prod-template/migrations
+          /usr/local/bin/migrate --version $LATEST_MIGRATION_FILE --dir /etc/prod-template/migrations
         '
       env:
         LATEST_MIGRATION_FILE: ${{ env.LATEST_MIGRATION_FILE }}

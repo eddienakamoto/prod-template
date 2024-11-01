@@ -85,6 +85,10 @@ jobs:
           mkdir -p /etc/prod-template/migrations
         '
 
+    - name: Copy Migration Files
+      run: |
+        scp -o StrictHostKeyChecking=no -r ./migrations ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }}:/etc/prod-template/
+
     - name: Run Migration on Production Server
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }} '
@@ -101,10 +105,6 @@ jobs:
     - name: Copy Migration Config
       run: |
         scp -o StrictHostKeyChecking=no ./dbconfig.yml ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }}:/etc/prod-template/dbconfig.yml
-
-    - name: Copy Migration Files
-      run: |
-        scp -o StrictHostKeyChecking=no -r ./migrations ${{ secrets.SSH_USER }}@${{ secrets.SSH_SERVER }}:/etc/prod-template/
 
     - name: Reload systemd, journald, and restart API
       run: |

@@ -55,6 +55,7 @@ func main() {
 			w.Write([]byte("Bad Request"))
 
 			pgconn.Exec(r.Context(), `INSERT INTO dummy(description) VALUES($1)`, fmt.Sprintf("Bad Request: %d at %v", choice, time.Now()))
+			pgconn.Exec(r.Context(), `INSERT INTO again(description) VALUES($1)`, fmt.Sprintf("Bad Request: %d at %v", choice, time.Now()))
 
 			logger.Error("Request failed",
 				zap.String("method", r.Method),
@@ -68,6 +69,7 @@ func main() {
 		w.Write([]byte("Hello, world!"))
 
 		pgconn.Exec(r.Context(), `INSERT INTO dummy(description) VALUES($1)`, fmt.Sprintf("Good Request: %d at %v", choice, time.Now()))
+		pgconn.Exec(r.Context(), `INSERT INTO again(description) VALUES($1)`, fmt.Sprintf("Good Request: %d at %v", choice, time.Now()))
 
 		logger.Info("Request processed",
 			zap.String("secret", os.Getenv("MY_SECRET")),
